@@ -1,12 +1,11 @@
-import { useState, useEffect } from "react";
-import "./App.css";
+import {useState, useEffect} from 'react';
 import { useDebounce } from "react-use";
-import Search from "./components/Search";
+import Search from './components/Search';
 import Spinner from "./components/Spinner";
 import MovieCard from "./components/MovieCard";
-//import { getTrendingMovies, updateSearchCount } from "./appwrite";
 
 const API_BASE_URL = "https://api.themoviedb.org/3";
+
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 
 const API_OPTIONS = {
@@ -17,88 +16,66 @@ const API_OPTIONS = {
   },
 };
 
-function App() {
+const App = () => {
   const [searchTerm, setsearchTerm] = useState("");
   const [errorMsg, seterrorMsg] = useState("");
   const [movieList, setmovieList] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
-  //const [trendingMovies, setTrendingMovies] = useState([]);
 
-  // Debounce the search term to prevent making too many API requests
-  // by waiting for the user to stop typing for 500ms
   useDebounce(() => setDebouncedSearchTerm(searchTerm), 500, [searchTerm]);
 
-  const fetchMovie = async (query = "") => {
+  
+  const fetchMovies = async (query ='') => {
     setIsLoading(true);
     seterrorMsg("");
     try {
       const endpoint = query
-  ? `${API_BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}`
-  : `${API_BASE_URL}/discover/movie?api_key=${API_KEY}&sort_by=popularity.desc`;
+        ? `${API_BASE_URL}/search/movie?query=${encodeURIComponent(query)}`
+        : `${API_BASE_URL}/discover/movie?sort_by=popularity.desc`;
 
-
-      const reponse = await fetch(endpoint, API_OPTIONS);
-
-      if (!reponse.ok) {
-        throw new Error("Falied to load movies");
-      }
-
-      const data = await reponse.json();
-
-      if (data.reponse === false) {
+         const response = await fetch(endpoint, API_OPTIONS);
+        
+         if(!response) {
+          throw new Error('Failed to fetch movies');
+         }
+         const data = await response.json();
+         
+         if (data.reponse === false) {
         seterrorMsg(data.error || "Failed to fetch movies");
         setmovieList([]);
         return;
       }
       setmovieList(data.results || []);
 
-      if (query && data.results.length > 0) {
-        
-        await updateSearchCount(query, data.results[0]);
-      }
     } catch (error) {
+      console.error(`Error fetching movies: ${error}`);
       seterrorMsg("Error fetching movie");
     } finally {
       setIsLoading(false);
     }
-  };
-
-//   const loadTrendingMovies = async () => {
-//     try {
-//       const movies = await getTrendingMovies();
-//       setTrendingMovies(movies);
-//     } catch (error) {
-//       console.log(error);
-//     }
-//   };
-
+  }
   useEffect(() => {
-    fetchMovie(debouncedSearchTerm);
-  }, [debouncedSearchTerm]);
-
-//   useEffect(() => {
-//     loadTrendingMovies();
-//   }, []);
-
+    fetchMovies(searchTerm);
+  }, [searchTerm]);
   return (
     <main>
-      <div className="pattern" />
-      <div className="wrapper">
-        <header>
-          <img src="./hero.png" alt="" /> 
-          <h1>
+      <div className='pattern' />
+
+      <div className='wrapper' >
+      <header>
+        <img src="./hero.png" alt="Hero Banner" />
+        <h1>
             Find <span className="text-gradient">Movies</span> you'll enjoy
             without hassle
           </h1>
-          
-          
-          <Search searchTerm={searchTerm} setsearchTerm={setsearchTerm} />
-        </header>
+      <Search searchTerm={searchTerm} setsearchTerm={setsearchTerm} />
+      </header>
+      <section className='all-movies'>
+        <h2 className='mt-[40px]'>All Movies</h2>
 
-        <section className="all-movies mt-10 text-center">
-          <h2>All movies</h2>
-          {isLoading ? (
+
+        {isLoading ? (
             <div className="text-white">
               <Spinner />
             </div>
@@ -111,10 +88,12 @@ function App() {
               ))}
             </ul>
           )}
-        </section>
+        
+      </section>
+
       </div>
     </main>
-  );
+  )
 }
 
 export default App;
