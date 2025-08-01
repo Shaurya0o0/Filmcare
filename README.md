@@ -1,1 +1,1 @@
-Go live : https://filmcare-btt9-qrdj59ome-shaurya0o0s-projects.vercel.app/
+Go live : https://filmcare.vercel.app/
